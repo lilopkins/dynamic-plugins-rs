@@ -22,6 +22,8 @@ dependencies = [
 [[package]]
 name = "dynamic-plugin-macros"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7faaeef102efbd35093fa826fbeb5bb0e833d7cd6e90b847cbf80f422e2f4231"
 dependencies = [
  "proc-macro2",
  "quote",
