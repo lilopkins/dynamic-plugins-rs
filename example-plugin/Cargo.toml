@@ -1,0 +1,12 @@
+[package]
+name = "example-plugin"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = [ "cdylib" ]
+
+[dependencies]
+dynamic-plugin = { path = "..", features = [ "client" ] }
+example-plugin-host = { path = "../example-plugin-host" }

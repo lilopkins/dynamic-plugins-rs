@@ -1,0 +1,22 @@
+[package]
+name = "dynamic-plugin-macros"
+version = "0.1.0"
+edition = "2021"
+authors = [
+    "Lily Hopkins <lily@hpkns.uk>",
+]
+description = "Macros for dynamic-plugin"
+repository = "https://github.com/lilopkins/dynamic-plugins-rs"
+license = "MIT"
+
+[lib]
+proc-macro = true
+
+[features]
+host = []
+client = []
+
+[dependencies]
+proc-macro2 = "1.0.82"
+quote = "1.0.36"
+syn = { version = "2.0.64", features = ["full", "extra-traits"] }
