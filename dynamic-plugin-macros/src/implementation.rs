@@ -2,18 +2,26 @@ use std::hash::Hash;
 
 use syn::{
     parse::{Parse, ParseStream},
-    FnArg, Ident, ItemFn, Result, ReturnType, Token,
+    FnArg, ItemFn, Result, ReturnType, Token, TypePath,
 };
 
 pub struct PluginImplementation {
-    pub target_plugin: Ident,
+    pub target_plugin: TypePath,
     pub functions: Vec<ItemFn>,
 }
 
 impl Hash for PluginImplementation {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         // Hash name
-        self.target_plugin.hash(state);
+        let type_ident = self
+            .target_plugin
+            .path
+            .segments
+            .last()
+            .unwrap()
+            .ident
+            .clone();
+        type_ident.hash(state);
 
         // Sort functions
         let mut functions = self.functions.clone();
