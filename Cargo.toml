@@ -15,5 +15,5 @@ client = ["dynamic-plugin-macros/client"]
 libloading = { version = "0.8.3" }
 dynamic-plugin-macros = "0.2.0"
 static_assertions = "1.1.0"
-thiserror = "1.0.61"
+thiserror = "2.0.11"
 libc = "0.2.155"
