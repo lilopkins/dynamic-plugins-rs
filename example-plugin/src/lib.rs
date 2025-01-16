@@ -6,7 +6,7 @@ use example_plugin_host::ExamplePlugin;
 plugin_impl! {
     ExamplePlugin,
 
-    fn do_a_thing() -> bool {
+    fn do_a_thing() {
         println!("A thing has been done!");
     }
 

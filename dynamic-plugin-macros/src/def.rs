@@ -1,7 +1,10 @@
 use std::hash::{Hash, Hasher};
 
 use syn::{
-    braced, parenthesized, parse::{Parse, ParseStream}, punctuated::Punctuated, Attribute, FnArg, Ident, Result, Token, Type
+    braced, parenthesized,
+    parse::{Parse, ParseStream},
+    punctuated::Punctuated,
+    Attribute, FnArg, Ident, Result, Token, Type,
 };
 
 pub struct PluginDefinition {
@@ -40,7 +43,7 @@ impl Hash for PluginDefinition {
 impl Parse for PluginDefinition {
     fn parse(input: ParseStream) -> Result<Self> {
         let _: Token![extern] = input.parse()?;
-        let _: Token![struct] = input.parse()?;
+        let _: Token![trait] = input.parse()?;
         let name = input.parse()?;
         let plugin_content;
         braced!(plugin_content in input);
@@ -93,4 +96,3 @@ pub struct PluginFunction {
     pub arguments: Vec<FnArg>,
     pub return_type: Option<Type>,
 }
-

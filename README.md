@@ -9,9 +9,9 @@ Rust is a powerful language with a strong emphasis on safety, however this can m
 ## Architecture
 
 ```text
-             ┌───────────┐                
-    Safe     │           │  Compile-time  
-    Interface│ Reusable  │  Checking      
+             ┌───────────┐
+    Safe     │           │  Compile-time
+    Interface│ Reusable  │  Checking
      ┌──────►│  Plugin   │◄─────┬────────┐
      │       │ Interface │      │        │
      │       │           │      │        │
@@ -24,8 +24,8 @@ Rust is a powerful language with a strong emphasis on safety, however this can m
                   │        ┌──────────┐  │
                   │        │          │  │
                   └───────►│ Plugin B ├──┘
-                           │          │   
-                           └──────────┘   
+                           │          │
+                           └──────────┘
 ```
 
 ### Plugin Host
@@ -66,7 +66,7 @@ Now in your `main.rs` file, you can define your interface:
 use dynamic_plugin::{libc::c_char, plugin_interface};
 
 plugin_interface! {
-    extern struct ExamplePlugin {
+    extern trait ExamplePlugin {
         /// Ask the plugin to do a thing
         fn do_a_thing();
         /// Say hello to a person
