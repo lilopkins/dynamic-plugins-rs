@@ -82,7 +82,7 @@ impl Parse for PluginDefinition {
                 name: fn_name,
                 arguments: vars.into_iter().collect(),
                 return_type,
-            })
+            });
         }
 
         Ok(Self { name, functions })

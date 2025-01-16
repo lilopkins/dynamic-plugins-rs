@@ -10,7 +10,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "dynamic-plugin"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "dynamic-plugin-macros",
  "libc",
@@ -21,9 +21,9 @@ dependencies = [
 
 [[package]]
 name = "dynamic-plugin-macros"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4ed42361302b31094c1b01d4557ed5d99d77969a05462c3c0a2b07710898534"
+checksum = "3b551a191af9bc1ee6a7843dad0eab2bf87516d7ee741c51d4731bd7bf418a92"
 dependencies = [
  "proc-macro2",
  "quote",

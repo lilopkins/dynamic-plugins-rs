@@ -1,4 +1,5 @@
-#![warn(missing_docs)]
+#![deny(missing_docs)]
+#![warn(clippy::pedantic)]
 #![doc = include_str!("../README.md")]
 
 // Re-export macros

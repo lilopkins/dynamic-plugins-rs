@@ -4,7 +4,7 @@
 
 In many pieces of software, it can be beneficial to allow other developers to add functionality that you have not considered. In order to do this, plugin-like systems are often used.
 
-Rust is a powerful language with a strong emphasis on safety, however this can make working with plugins quite challenging as you can quickly lose a lot of the compile-time checking that Rust offers. The goal of this library is to reintroduce the safety that Rust is built upon when writing plugin libraries (DLLs, DyLibs or SOs) that are loaded at runtime.
+Rust is a powerful language with a strong emphasis on safety, however this can make working with plugins quite challenging as you can quickly lose a lot of the compile-time checking that Rust offers. The goal of this library is to reintroduce the safety that Rust is built upon when writing plugin libraries (DLLs, Dylibs or SOs) that are loaded at runtime.
 
 ## Architecture
 

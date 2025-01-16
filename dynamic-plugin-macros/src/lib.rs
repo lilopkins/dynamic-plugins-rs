@@ -1,3 +1,9 @@
+#![deny(missing_docs)]
+#![warn(clippy::pedantic)]
+#![allow(clippy::missing_panics_doc)]
+
+//! # Macros for the [`dynamic-plugin`](https://docs.rs/dynamic-plugin/latest/dynamic_plugin/) crate.
+
 use std::hash::{Hash, Hasher};
 
 use def::PluginDefinition;
@@ -9,15 +15,15 @@ use syn::{parse_macro_input, FnArg};
 use crate::hasher::PluginSignatureHasher;
 
 mod def;
-mod implementation;
 mod hasher;
+mod implementation;
 
 /// Define an interface for a plugin. See the `dynamic_plugin` crate documentation for more.
-/// 
+///
 /// ## Example
 /// ```ignore
 /// plugin_interface! {
-///     extern struct ExamplePlugin {
+///     extern trait ExamplePlugin {
 ///         /// Ask the plugin to do a thing
 ///         fn do_a_thing();
 ///         /// Say hello to a person
@@ -131,27 +137,27 @@ pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
 }
 
 /// Write an implementation for a plugin. See the `dynamic_plugin` crate documentation for more.
-/// 
+///
 /// ## `attempt to compute '0_usize - 1_usize', which would overflow`
-/// 
+///
 /// If you come across this compile-time error, this indicates that the implementation you are writing does not match the expected implementation for the plugin definition. Please check that you:
-/// 
+///
 /// - Are using the correct definition.
 /// - Have all the functions you need to meet the definition.
 /// - That all the functions are named correctly (identically to the definition).
 /// - That all the function arguments are the same order and types as the definition.
 /// - That all the function return types are the same as the definition.
-/// 
+///
 /// ## Example
-/// 
+///
 /// ```ignore
 /// plugin_impl! {
 ///     ExamplePlugin,
-/// 
+///
 ///     fn do_a_thing() {
 ///         println!("A thing has been done!");
 ///     }
-/// 
+///
 ///     fn say_hello(name: *const c_char) -> bool {
 ///         unsafe {
 ///             let name = CStr::from_ptr(name);

@@ -10,7 +10,7 @@ impl Hasher for PluginSignatureHasher {
 
     fn write(&mut self, bytes: &[u8]) {
         for byte in bytes {
-            self.0 = self.0.wrapping_add(*byte as u64).rotate_left(8);
+            self.0 = self.0.wrapping_add(u64::from(*byte)).rotate_left(8);
         }
     }
 }
