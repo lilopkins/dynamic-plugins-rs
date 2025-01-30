@@ -1,8 +1,7 @@
-use std::hash::Hash;
+use std::hash::{Hash, Hasher};
 
 use syn::{
-    parse::{Parse, ParseStream},
-    FnArg, ItemFn, Result, ReturnType, Token, TypePath,
+    parse::{Parse, ParseStream}, FnArg, ItemFn, Result, ReturnType, Token, TypePath
 };
 
 pub struct PluginImplementation {
@@ -11,7 +10,7 @@ pub struct PluginImplementation {
 }
 
 impl Hash for PluginImplementation {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+    fn hash<H: Hasher>(&self, state: &mut H) {
         // Hash name
         let type_ident = self
             .target_plugin
@@ -27,6 +26,7 @@ impl Hash for PluginImplementation {
         let mut functions = self.functions.clone();
         functions.sort_by(|a, b| a.sig.ident.cmp(&b.sig.ident));
         for function in functions {
+            "fn".hash(state);
             // Hash function ident
             function.sig.ident.hash(state);
 
@@ -34,13 +34,15 @@ impl Hash for PluginImplementation {
                 // Hash argument types only
                 if let FnArg::Typed(typed) = inp {
                     let ty = typed.ty;
-                    ty.hash(state);
+                    "arg".hash(state);
+                    crate::hash_type(state, *ty);
                 }
             }
 
             // Hash return type
             if let ReturnType::Type(_, ty) = function.sig.output {
-                ty.hash(state);
+                "ret".hash(state);
+                crate::hash_type(state, *ty);
             }
         }
     }

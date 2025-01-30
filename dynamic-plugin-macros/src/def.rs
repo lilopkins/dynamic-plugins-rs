@@ -22,19 +22,22 @@ impl Hash for PluginDefinition {
         functions.sort_by(|a, b| a.name.cmp(&b.name));
         for function in functions {
             // Hash function ident
+            "fn".hash(state);
             function.name.hash(state);
 
             for inp in function.arguments {
                 // Hash argument types only
                 if let FnArg::Typed(typed) = inp {
                     let ty = typed.ty;
-                    ty.hash(state);
+                    "arg".hash(state);
+                    crate::hash_type(state, *ty);
                 }
             }
 
             // Hash return type
             if let Some(ty) = function.return_type {
-                ty.hash(state);
+                "ret".hash(state);
+                crate::hash_type(state, ty);
             }
         }
     }

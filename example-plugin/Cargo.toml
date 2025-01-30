@@ -8,5 +8,5 @@ publish = false
 crate-type = [ "cdylib" ]
 
 [dependencies]
-dynamic-plugin = { path = "..", features = [ "client" ] }
+dynamic-plugin = { path = "..", features = [ "client", "debug-hashes" ] }
 example-plugin-host = { path = "../example-plugin-host" }

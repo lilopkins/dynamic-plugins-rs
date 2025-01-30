@@ -1,6 +1,6 @@
 [package]
 name = "dynamic-plugin"
-version = "0.2.2"
+version = "0.3.0"
 edition = "2021"
 authors = ["Lily Hopkins <lily@hpkns.uk>"]
 description = "Write compile-time-checked, dynamically-loaded plugin libraries for your Rust software."
@@ -10,10 +10,11 @@ license = "MIT"
 [features]
 host = ["dynamic-plugin-macros/host"]
 client = ["dynamic-plugin-macros/client"]
+debug-hashes = ["dynamic-plugin-macros/debug-hashes"]
 
 [dependencies]
 libloading = { version = "0.8.3" }
-dynamic-plugin-macros = "0.2.2"
+dynamic-plugin-macros = "0.3.0"
 static_assertions = "1.1.0"
 thiserror = "2.0.11"
 libc = "0.2.155"

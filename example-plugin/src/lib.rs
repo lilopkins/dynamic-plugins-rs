@@ -1,16 +1,15 @@
 use std::ffi::CStr;
 
-use dynamic_plugin::{libc::c_char, plugin_impl};
-use example_plugin_host::ExamplePlugin;
+use dynamic_plugin::{libc, plugin_impl};
 
 plugin_impl! {
-    ExamplePlugin,
+    example_plugin_host::ExamplePlugin,
 
     fn do_a_thing() {
         println!("A thing has been done!");
     }
 
-    fn say_hello(name: *const c_char) -> bool {
+    fn say_hello(name: *const libc::c_char) -> bool {
         unsafe {
             let name = CStr::from_ptr(name);
             println!("Hello, {}!", name.to_string_lossy());
