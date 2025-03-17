@@ -9,11 +9,9 @@ plugin_impl! {
         println!("A thing has been done!");
     }
 
-    fn say_hello(name: *const libc::c_char) -> bool {
-        unsafe {
-            let name = CStr::from_ptr(name);
-            println!("Hello, {}!", name.to_string_lossy());
-        }
+    unsafe fn say_hello(name: *const libc::c_char) -> bool {
+        let name = CStr::from_ptr(name);
+        println!("Hello, {}!", name.to_string_lossy());
         true
     }
 }

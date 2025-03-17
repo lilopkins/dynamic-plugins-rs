@@ -1,6 +1,6 @@
 [package]
 name = "dynamic-plugin-macros"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 authors = ["Lily Hopkins <lily@hpkns.uk>"]
 description = "Macros for dynamic-plugin"

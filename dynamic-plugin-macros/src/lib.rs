@@ -214,10 +214,12 @@ pub fn plugin_impl(tokens: TokenStream) -> TokenStream {
 
     let plugin = parse_macro_input!(tokens as PluginImplementation);
     let target_plugin = &plugin.target_plugin;
-    let functions = plugin.functions.iter().map(|fun| {
+    let functions = plugin.functions.iter().map(|maybe_unsafe_func| {
+        let unsafe_ = maybe_unsafe_func.unsafe_;
+        let func = &maybe_unsafe_func.func;
         quote! {
             #[no_mangle]
-            pub extern "C" #fun
+            pub #unsafe_ extern "C" #func
         }
     });
     let mut hasher = PluginSignatureHasher::default();

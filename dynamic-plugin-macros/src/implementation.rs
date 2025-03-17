@@ -6,7 +6,7 @@ use syn::{
 
 pub struct PluginImplementation {
     pub target_plugin: TypePath,
-    pub functions: Vec<ItemFn>,
+    pub functions: Vec<MaybeUnsafeFn>,
 }
 
 impl Hash for PluginImplementation {
@@ -24,8 +24,9 @@ impl Hash for PluginImplementation {
 
         // Sort functions
         let mut functions = self.functions.clone();
-        functions.sort_by(|a, b| a.sig.ident.cmp(&b.sig.ident));
-        for function in functions {
+        functions.sort_by(|a, b| a.func.sig.ident.cmp(&b.func.sig.ident));
+        for maybe_unsafe_func in functions {
+            let function = maybe_unsafe_func.func;
             "fn".hash(state);
             // Hash function ident
             function.sig.ident.hash(state);
@@ -60,6 +61,21 @@ impl Parse for PluginImplementation {
         Ok(Self {
             target_plugin,
             functions,
+        })
+    }
+}
+
+#[derive(Clone)]
+pub struct MaybeUnsafeFn {
+    pub unsafe_: Option<Token![unsafe]>,
+    pub func: ItemFn,
+}
+
+impl Parse for MaybeUnsafeFn {
+    fn parse(input: ParseStream) -> Result<Self> {
+        Ok(Self {
+            unsafe_: input.parse()?,
+            func: input.parse()?,
         })
     }
 }
