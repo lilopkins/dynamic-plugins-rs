@@ -10,20 +10,20 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "dynamic-plugin"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "dynamic-plugin-macros",
  "libc",
  "libloading",
- "static_assertions",
+ "sa",
  "thiserror",
 ]
 
 [[package]]
 name = "dynamic-plugin-macros"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1ad3cd79f708dfa7afe940fc54dcff785a79b54b102becf3da2d2fd710326f63"
+checksum = "94eb6ea9814fe3dd80fa2d48585c04475d28eb0a60561f723fe629f60c0405fa"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -65,10 +65,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "static_assertions"
-version = "1.1.0"
+name = "sa"
+version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+checksum = "236ebc09b9423b2e39e5f3924be8188b9f0fdb64ec24bb07e3d1d36dc0ec7929"
 
 [[package]]
 name = "syn"

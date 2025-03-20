@@ -147,7 +147,7 @@ The plugin is now ready to build and distribute.
 
 You can also avoid reusing the plugin definition by putting it in it's own library. An implementation that does this is available in the `example-plugin` and `example-plugin-host` folders of the source repository.
 
-## `attempt to compute '0_usize - 1_usize', which would overflow`
+## "The implementation signature does not match the definition."
 
 If you come across this compile-time error, this indicates that the implementation you are writing does not match the expected implementation for the plugin definition. Please check that you:
 

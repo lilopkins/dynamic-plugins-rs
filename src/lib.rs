@@ -4,7 +4,7 @@
 
 // Re-export macros
 pub use dynamic_plugin_macros::*;
-pub use static_assertions::const_assert_eq;
+pub use sa::static_assert;
 
 // Re-export libloading library
 pub use libloading::Library as PluginDynamicLibrary;

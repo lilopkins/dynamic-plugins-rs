@@ -244,7 +244,7 @@ pub fn plugin_impl(tokens: TokenStream) -> TokenStream {
     };
 
     quote! {
-        ::dynamic_plugin::const_assert_eq!(#target_plugin::PLUGIN_SIGNATURE, #hash);
+        ::dynamic_plugin::static_assert!(#target_plugin::PLUGIN_SIGNATURE == #hash, "The implementation signature does not match the definition. Check that all functions are implemented with the correct types.");
 
         #[no_mangle]
         pub extern "C" fn _dynamic_plugin_signature() -> u64 {
