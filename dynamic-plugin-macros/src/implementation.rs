@@ -1,7 +1,8 @@
 use std::hash::{Hash, Hasher};
 
 use syn::{
-    parse::{Parse, ParseStream}, FnArg, ItemFn, Result, ReturnType, Token, TypePath
+    parse::{Parse, ParseStream},
+    FnArg, ItemFn, Result, ReturnType, Token, TypePath,
 };
 
 pub struct PluginImplementation {
@@ -67,14 +68,14 @@ impl Parse for PluginImplementation {
 
 #[derive(Clone)]
 pub struct MaybeUnsafeFn {
-    pub unsafe_: Option<Token![unsafe]>,
+    pub _unsafe: Option<Token![unsafe]>,
     pub func: ItemFn,
 }
 
 impl Parse for MaybeUnsafeFn {
     fn parse(input: ParseStream) -> Result<Self> {
         Ok(Self {
-            unsafe_: input.parse()?,
+            _unsafe: input.parse()?,
             func: input.parse()?,
         })
     }

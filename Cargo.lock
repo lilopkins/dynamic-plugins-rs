@@ -10,7 +10,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "dynamic-plugin"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "dynamic-plugin-macros",
  "libc",
@@ -21,13 +21,27 @@ dependencies = [
 
 [[package]]
 name = "dynamic-plugin-macros"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94eb6ea9814fe3dd80fa2d48585c04475d28eb0a60561f723fe629f60c0405fa"
+version = "0.6.0"
 dependencies = [
+ "proc-macro-error2",
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "example-plugin"
+version = "0.0.0"
+dependencies = [
+ "dynamic-plugin",
+ "example-plugin-host",
+]
+
+[[package]]
+name = "example-plugin-host"
+version = "0.0.0"
+dependencies = [
+ "dynamic-plugin",
 ]
 
 [[package]]
@@ -44,6 +58,28 @@ checksum = "fc2f4eb4bc735547cfed7c0a4922cbd04a4655978c09b54f1f7b228750664c34"
 dependencies = [
  "cfg-if",
  "windows-targets",
+]
+
+[[package]]
+name = "proc-macro-error-attr2"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96de42df36bb9bba5542fe9f1a054b8cc87e172759a1868aa05c1f3acc89dfc5"
+dependencies = [
+ "proc-macro2",
+ "quote",
+]
+
+[[package]]
+name = "proc-macro-error2"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11ec05c52be0a07b08061f7dd003e7d7092e0472bc731b4af7bb1ef876109802"
+dependencies = [
+ "proc-macro-error-attr2",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

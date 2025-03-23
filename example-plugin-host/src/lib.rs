@@ -6,5 +6,7 @@ plugin_interface! {
         fn do_a_thing();
         /// Say hello to a person
         fn say_hello(to: *const c_char) -> bool;
+        /// Here's a function
+        fn trigger_function(a_func: extern fn(u32, u32));
     }
 }

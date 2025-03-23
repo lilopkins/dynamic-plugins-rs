@@ -24,7 +24,7 @@ pub enum Error {
     DynamicLibrary(#[from] libloading::Error),
 
     /// The discovered library is not a plugin, as in it does not expose the `_dynamic_plugin_signature` function.
-    #[error("The discoverd library is not a plugin.")]
+    #[error("The discovered library is not a plugin.")]
     NotAPlugin,
 
     /// The plugin's signature (i.e. name, function names, function arguments and function return types) does not match the expected value.

@@ -14,4 +14,8 @@ plugin_impl! {
         println!("Hello, {}!", name.to_string_lossy());
         true
     }
+
+    fn trigger_function(a_func: extern fn(u32, u32)) {
+        a_func(5, 3);
+    }
 }

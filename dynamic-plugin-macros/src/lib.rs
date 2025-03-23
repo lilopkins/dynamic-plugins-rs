@@ -1,6 +1,5 @@
 #![deny(missing_docs)]
 #![warn(clippy::pedantic)]
-#![allow(clippy::missing_panics_doc)]
 
 //! # Macros for the [`dynamic-plugin`](https://docs.rs/dynamic-plugin/latest/dynamic_plugin/) crate.
 
@@ -9,8 +8,9 @@ use std::hash::{Hash, Hasher};
 use def::PluginDefinition;
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
+use proc_macro_error2::abort;
 use quote::quote;
-use syn::{parse_macro_input, FnArg, Type};
+use syn::{parse_macro_input, FnArg, ReturnType, Type};
 
 use crate::hasher::PluginSignatureHasher;
 
@@ -84,7 +84,7 @@ pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
             }
         });
 
-        quote! {
+        Some(quote! {
             impl #plugin_ident {
                 #hash_debug
 
@@ -157,9 +157,9 @@ pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
 
                 #(#funcs)*
             }
-        }
+        })
     } else {
-        TokenStream2::new()
+        None
     };
 
     quote! {
@@ -215,7 +215,7 @@ pub fn plugin_impl(tokens: TokenStream) -> TokenStream {
     let plugin = parse_macro_input!(tokens as PluginImplementation);
     let target_plugin = &plugin.target_plugin;
     let functions = plugin.functions.iter().map(|maybe_unsafe_func| {
-        let unsafe_ = maybe_unsafe_func.unsafe_;
+        let unsafe_ = maybe_unsafe_func._unsafe;
         let func = &maybe_unsafe_func.func;
         quote! {
             #[no_mangle]
@@ -263,31 +263,65 @@ fn hash_type<H: Hasher>(hasher: &mut H, ty: Type) {
         Type::Array(inner) => {
             "arr".hash(hasher);
             hash_type(hasher, *inner.elem);
-        },
-        Type::BareFn(_) => panic!("Bare functions are not supported in plugin interfaces"),
+        }
+        Type::BareFn(inner) => {
+            "fn".hash(hasher);
+            for inp in inner.inputs {
+                hash_type(hasher, inp.ty);
+            }
+            if inner.variadic.is_some() {
+                abort!(
+                    inner.variadic,
+                    "Bare functions with variadics are not supported in plugin interfaces"
+                );
+            }
+            "->".hash(hasher);
+            match inner.output {
+                ReturnType::Default => "()".hash(hasher),
+                ReturnType::Type(_, ty) => hash_type(hasher, *ty),
+            }
+            ";".hash(hasher);
+        }
         Type::Group(inner) => hash_type(hasher, *inner.elem),
-        Type::ImplTrait(_) => panic!("Traits are supported in plugin interfaces"),
-        Type::Infer(_) => panic!("Compiler inference is supported in plugin interfaces"),
-        Type::Macro(_) => panic!("Macros are not supported in plugin interfaces"),
+        Type::ImplTrait(inner) => abort!(inner, "Traits are supported in plugin interfaces"),
+        Type::Infer(inner) => abort!(
+            inner,
+            "Compiler inference is supported in plugin interfaces"
+        ),
+        Type::Macro(inner) => abort!(inner, "Macros are not supported in plugin interfaces"),
         Type::Never(_) => "never".hash(hasher),
         Type::Paren(inner) => hash_type(hasher, *inner.elem),
         Type::Path(inner) => {
             if inner.qself.is_some() {
-                panic!("Qualified types are not supported in plugin interfaces");
+                abort!(
+                    inner,
+                    "Qualified types are not supported in plugin interfaces"
+                );
             }
             // Hash only last segment
             let last_segment = inner.path.segments.last().unwrap();
             if !last_segment.arguments.is_none() {
-                panic!("Types cannot be generic or require lifetimes in plugin interfaces");
+                abort!(
+                    last_segment.arguments,
+                    "Types cannot be generic or require lifetimes in plugin interfaces"
+                );
             }
             last_segment.ident.hash(hasher);
-        },
+        }
         Type::Ptr(inner) => hash_type(hasher, *inner.elem),
-        Type::Reference(_) => panic!("References are not supported in plugin interfaces (use raw pointers instead)"),
-        Type::Slice(_) => panic!("Slices are not supported in plugin interfaces (use raw pointers instead)"),
-        Type::TraitObject(_) => panic!("Trait objects not supported in plugin interfaces"),
-        Type::Tuple(_) => panic!("Tuples not supported in plugin interfaces"),
-        Type::Verbatim(_) => panic!("This type is not supported in plugin interfaces"),
+        Type::Reference(inner) => abort!(
+            inner,
+            "References are not supported in plugin interfaces (use raw pointers instead)"
+        ),
+        Type::Slice(inner) => abort!(
+            inner,
+            "Slices are not supported in plugin interfaces (use raw pointers instead)"
+        ),
+        Type::TraitObject(inner) => {
+            abort!(inner, "Trait objects not supported in plugin interfaces")
+        }
+        Type::Tuple(inner) => abort!(inner, "Tuples not supported in plugin interfaces"),
+        Type::Verbatim(inner) => abort!(inner, "This type is not supported in plugin interfaces"),
         _ => todo!("This type is not yet supported by dynamic-plugin"),
     }
 }
