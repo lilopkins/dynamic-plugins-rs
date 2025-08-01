@@ -8,7 +8,7 @@ use std::hash::{Hash, Hasher};
 use def::PluginDefinition;
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
-use proc_macro_error2::abort;
+use proc_macro_error2::{abort, proc_macro_error};
 use quote::quote;
 use syn::{parse_macro_input, FnArg, ReturnType, Type};
 
@@ -32,6 +32,7 @@ mod implementation;
 /// }
 /// ```
 #[proc_macro]
+#[proc_macro_error]
 pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
     let plugin_def = parse_macro_input!(tokens as PluginDefinition);
     let plugin_ident = &plugin_def.name;

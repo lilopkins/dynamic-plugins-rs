@@ -21,6 +21,7 @@ sa = "2.0.0"
 
 [workspace]
 members = [
+    ".",
     "dynamic-plugin-macros",
     "example-plugin",
     "example-plugin-host",
