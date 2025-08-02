@@ -4,7 +4,6 @@
 
 // Re-export macros
 pub use dynamic_plugin_macros::*;
-pub use sa::static_assert;
 
 // Re-export libloading library
 pub use libloading::Library as PluginDynamicLibrary;
@@ -30,4 +29,22 @@ pub enum Error {
     /// The plugin's signature (i.e. name, function names, function arguments and function return types) does not match the expected value.
     #[error("The plugin's signature does not match.")]
     InvalidPluginSignature,
+}
+
+/// Statically assert an expression with an error message.
+/// 
+/// This is used internally by the dynamic-plugin macros.
+#[macro_export]
+macro_rules! static_assert {
+    ($exp:expr, $msg:expr) => {
+        #[deny(const_err)]
+        #[allow(unused_must_use)]
+        const _: () = {
+            if !($exp) {
+                core::panic!("{}", $msg);
+            }
+
+            ()
+        };
+    };
 }
