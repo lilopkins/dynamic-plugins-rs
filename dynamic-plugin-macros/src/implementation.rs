@@ -1,7 +1,8 @@
 use std::hash::{Hash, Hasher};
 
 use syn::{
-    parse::{Parse, ParseStream}, Attribute, FnArg, ItemFn, Result, ReturnType, Token, TypePath
+    parse::{Parse, ParseStream},
+    Attribute, FnArg, ItemFn, Result, ReturnType, Token, TypePath,
 };
 
 pub struct PluginImplementation {

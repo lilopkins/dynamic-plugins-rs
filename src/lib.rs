@@ -4,6 +4,7 @@
 
 // Re-export macros
 pub use dynamic_plugin_macros::*;
+pub use const_format::concatcp as const_concat;
 
 // Re-export libloading library
 pub use libloading::Library as PluginDynamicLibrary;

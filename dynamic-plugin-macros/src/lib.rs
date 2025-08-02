@@ -85,6 +85,14 @@ pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
             }
         });
 
+        let fn_checks = plugin_def.functions.iter().map(|f| {
+            let name_bytes = f.name.to_string();
+            quote! {
+                let _: ::dynamic_plugin::PluginLibrarySymbol<unsafe extern fn()> =
+                    library.get(#name_bytes.as_bytes()).map_err(|_| ::dynamic_plugin::Error::NotAPlugin)?;
+            }
+        });
+
         Some(quote! {
             impl #plugin_ident {
                 #hash_debug
@@ -156,6 +164,38 @@ pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
                     }
                 }
 
+                /// Load the plugin at `path`, checking if it is valid
+                /// using a more compatible method, checking for the
+                /// presence of each function rather than just the
+                /// signature function.
+                ///
+                /// This makes it slightly easier to implement plugins
+                /// in languages other than Rust, however slightly
+                /// increases the chances of errors being returned
+                /// later, for example if function parameters do not
+                /// match, as in compatability mode this is not checked
+                /// when the plugin is loaded.
+                ///
+                /// # Errors
+                ///
+                /// - [`::dynamic_plugin::Error::NotAPlugin`] if the file provided is determined not to be a compatible plugin, i.e. not having the required functions present and exposed.
+                pub fn load_plugin_and_check_compat<P>(path: P) -> ::dynamic_plugin::Result<Self>
+                where
+                    P: ::std::convert::AsRef<::std::ffi::OsStr>,
+                {
+                    unsafe {
+                        // Attempt to load library
+                        let library = ::dynamic_plugin::PluginDynamicLibrary::new(path)?;
+
+                        // Check that each function exists
+                        #(#fn_checks)*
+
+                        Ok(Self {
+                            library,
+                        })
+                    }
+                }
+
                 #(#funcs)*
             }
         })
@@ -163,61 +203,63 @@ pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
         None
     };
 
-    let definition = {
-        let mut s = "The implementation signature does not match the definition:\n\n".to_string();
-        for def::PluginFunction {
-            attributes,
-            name,
-            arguments,
-            return_type,
-            ..
-        } in &plugin_def.functions
+    let definition =
         {
-            for attr in attributes {
-                if attr.path().is_ident("doc") {
-                    match &attr.meta {
-                        syn::Meta::NameValue(inner) => {
-                            if inner.path.is_ident("doc") {
-                                if let syn::Expr::Lit(expr) = &inner.value {
-                                    if let Lit::Str(doc) = &expr.lit {
-                                        s.push_str(&format!("/// {}\n", doc.value().trim()));
+            let mut s = String::new();
+            for def::PluginFunction {
+                attributes,
+                name,
+                arguments,
+                return_type,
+                ..
+            } in &plugin_def.functions
+            {
+                for attr in attributes {
+                    if attr.path().is_ident("doc") {
+                        match &attr.meta {
+                            syn::Meta::NameValue(inner) => {
+                                if inner.path.is_ident("doc") {
+                                    if let syn::Expr::Lit(expr) = &inner.value {
+                                        if let Lit::Str(doc) = &expr.lit {
+                                            s.push_str(&format!("/// {}\n", doc.value().trim()));
+                                        }
                                     }
                                 }
                             }
-                        },
-                        _ => (),
-                    }                    
-                }
-            }
-            s.push_str("fn ");
-            s.push_str(&name.to_string());
-            s.push('(');
-            for (idx, arg) in arguments.iter().enumerate() {
-                match arg {
-                    FnArg::Receiver(..) => s.push_str("self"),
-                    FnArg::Typed(ty) => {
-                        s.push_str("_: ");
-                        s.push_str(&crate::type_to_string(*ty.ty.clone())
-                            .expect("this should have failed earlier! please open a bug report!"));
+                            _ => (),
+                        }
                     }
-                };
-                if idx < arguments.len() - 1 {
-                    s.push_str(", ");
                 }
+                s.push_str("fn ");
+                s.push_str(&name.to_string());
+                s.push('(');
+                for (idx, arg) in arguments.iter().enumerate() {
+                    match arg {
+                        FnArg::Receiver(..) => s.push_str("self"),
+                        FnArg::Typed(ty) => {
+                            s.push_str("_: ");
+                            s.push_str(&crate::type_to_string(*ty.ty.clone()).expect(
+                                "this should have failed earlier! please open a bug report!",
+                            ));
+                        }
+                    };
+                    if idx < arguments.len() - 1 {
+                        s.push_str(", ");
+                    }
+                }
+                s.push(')');
+                if let ::std::option::Option::Some(ret) = return_type {
+                    s.push_str(" -> ");
+                    s.push_str(
+                        &crate::type_to_string(ret.clone())
+                            .expect("this should have failed earlier! please open a bug report!"),
+                    );
+                }
+                s.push_str(r#" { todo!("not yet implemented") }"#);
+                s.push('\n');
             }
-            s.push(')');
-            if let ::std::option::Option::Some(ret) = return_type {
-                s.push_str(" -> ");
-                s.push_str(
-                    &crate::type_to_string(ret.clone())
-                        .expect("this should have failed earlier! please open a bug report!"),
-                );
-            }
-            s.push_str(r#" { todo!("not yet implemented") }"#);
-            s.push('\n');
-        }
-        s
-    };
+            s
+        };
     let func_sigs = plugin_def.functions.iter().map(|f| {
         let func_name = f.name.to_string();
         let args = f.arguments.iter().map(|a| match a {
@@ -245,7 +287,14 @@ pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
         }
 
         impl #plugin_ident {
+            /// The signature of this plugin. This number is dependent
+            /// on the functions, their arguments and their return
+            /// types. Two plugins with the same signature are *likely*
+            /// to be compatible.
             pub const PLUGIN_SIGNATURE: u64 = #hash;
+            /// The plugin definition is a string which defines an empty
+            /// Rust definition of the plugin. It is used to generate
+            /// useful error messages.
             pub const PLUGIN_DEFINITION: &str = #definition;
             /// The functions and their signatures. Each tuple holds
             /// (function name, [arguments], maybe return type)
@@ -327,7 +376,13 @@ pub fn plugin_impl(tokens: TokenStream) -> TokenStream {
     };
 
     quote! {
-        ::dynamic_plugin::static_assert!(#target_plugin::PLUGIN_SIGNATURE == #hash, #target_plugin::PLUGIN_DEFINITION);
+        ::dynamic_plugin::static_assert!(
+            #target_plugin::PLUGIN_SIGNATURE == #hash,
+            ::dynamic_plugin::const_concat!(
+                "\nThe implementation does not match the definition:\n\n",
+                #target_plugin::PLUGIN_DEFINITION
+            )
+        );
 
         #[no_mangle]
         pub extern "C" fn _dynamic_plugin_signature() -> u64 {

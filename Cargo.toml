@@ -18,6 +18,7 @@ dynamic-plugin-macros = { version = "0.6.0", path = "dynamic-plugin-macros" }
 thiserror = "2.0.11"
 libc = "0.2.155"
 sa = "2.0.0"
+const_format = "0.2.34"
 
 [workspace]
 members = [
