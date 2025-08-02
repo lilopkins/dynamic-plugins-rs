@@ -15,7 +15,7 @@ plugin_impl! {
         true
     }
 
-    fn trigger_function(a_func: extern fn(u32, u32)) {
+    fn trigger_function(a_func: extern "C" fn(u32, u32)) {
         a_func(5, 3);
     }
 }

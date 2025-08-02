@@ -8,9 +8,9 @@ use std::hash::{Hash, Hasher};
 use def::PluginDefinition;
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
-use proc_macro_error2::abort;
+use proc_macro_error2::{abort, proc_macro_error};
 use quote::quote;
-use syn::{parse_macro_input, FnArg, ReturnType, Type};
+use syn::{parse_macro_input, FnArg, Lit, ReturnType, Type};
 
 use crate::hasher::PluginSignatureHasher;
 
@@ -32,6 +32,7 @@ mod implementation;
 /// }
 /// ```
 #[proc_macro]
+#[proc_macro_error]
 pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
     let plugin_def = parse_macro_input!(tokens as PluginDefinition);
     let plugin_ident = &plugin_def.name;
@@ -39,7 +40,7 @@ pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
     let mut hasher = PluginSignatureHasher::default();
     plugin_def.hash(&mut hasher);
     let hash = hasher.finish();
-    
+
     let hash_debug: Option<TokenStream2> = {
         #[cfg(feature = "debug-hashes")]
         {
@@ -84,6 +85,14 @@ pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
             }
         });
 
+        let fn_checks = plugin_def.functions.iter().map(|f| {
+            let name_bytes = f.name.to_string();
+            quote! {
+                let _: ::dynamic_plugin::PluginLibrarySymbol<unsafe extern fn()> =
+                    library.get(#name_bytes.as_bytes()).map_err(|_| ::dynamic_plugin::Error::NotAPlugin)?;
+            }
+        });
+
         Some(quote! {
             impl #plugin_ident {
                 #hash_debug
@@ -111,9 +120,9 @@ pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
                 }
 
                 /// Load the plugin at `path`
-                /// 
+                ///
                 /// # Errors
-                /// 
+                ///
                 /// - [`::dynamic_plugin::Error::NotAPlugin`] if the file provided is determined not to be a compatible (dynamic_plugin style) plugin.
                 /// - [`::dynamic_plugin::Error::InvalidPluginSignature`] if the signature does not match this loader.
                 pub fn load_plugin_and_check<P>(path: P) -> ::dynamic_plugin::Result<Self>
@@ -124,9 +133,9 @@ pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
                 }
 
                 /// Load the plugin at `path`
-                /// 
+                ///
                 /// # Errors
-                /// 
+                ///
                 /// - [`::dynamic_plugin::Error::NotAPlugin`] if the file provided is determined not to be a compatible (dynamic_plugin style) plugin.
                 /// - [`::dynamic_plugin::Error::InvalidPluginSignature`] if `check_signature` is true and the signature does not match this loader.
                 pub fn load_plugin<P>(path: P, check_signature: bool) -> ::dynamic_plugin::Result<Self>
@@ -143,11 +152,43 @@ pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
                         if check_signature {
                             // Check plugin library signature
                             let hash = func();
-                            
+
                             if hash != #hash {
                                 return ::dynamic_plugin::Result::Err(::dynamic_plugin::Error::InvalidPluginSignature);
                             }
                         }
+
+                        Ok(Self {
+                            library,
+                        })
+                    }
+                }
+
+                /// Load the plugin at `path`, checking if it is valid
+                /// using a more compatible method, checking for the
+                /// presence of each function rather than just the
+                /// signature function.
+                ///
+                /// This makes it slightly easier to implement plugins
+                /// in languages other than Rust, however slightly
+                /// increases the chances of errors being returned
+                /// later, for example if function parameters do not
+                /// match, as in compatability mode this is not checked
+                /// when the plugin is loaded.
+                ///
+                /// # Errors
+                ///
+                /// - [`::dynamic_plugin::Error::NotAPlugin`] if the file provided is determined not to be a compatible plugin, i.e. not having the required functions present and exposed.
+                pub fn load_plugin_and_check_compat<P>(path: P) -> ::dynamic_plugin::Result<Self>
+                where
+                    P: ::std::convert::AsRef<::std::ffi::OsStr>,
+                {
+                    unsafe {
+                        // Attempt to load library
+                        let library = ::dynamic_plugin::PluginDynamicLibrary::new(path)?;
+
+                        // Check that each function exists
+                        #(#fn_checks)*
 
                         Ok(Self {
                             library,
@@ -162,13 +203,104 @@ pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
         None
     };
 
+    let definition =
+        {
+            let mut s = String::new();
+            for def::PluginFunction {
+                attributes,
+                name,
+                arguments,
+                return_type,
+                ..
+            } in &plugin_def.functions
+            {
+                for attr in attributes {
+                    if attr.path().is_ident("doc") {
+                        match &attr.meta {
+                            syn::Meta::NameValue(inner) => {
+                                if inner.path.is_ident("doc") {
+                                    if let syn::Expr::Lit(expr) = &inner.value {
+                                        if let Lit::Str(doc) = &expr.lit {
+                                            s.push_str(&format!("/// {}\n", doc.value().trim()));
+                                        }
+                                    }
+                                }
+                            }
+                            _ => (),
+                        }
+                    }
+                }
+                s.push_str("fn ");
+                s.push_str(&name.to_string());
+                s.push('(');
+                for (idx, arg) in arguments.iter().enumerate() {
+                    match arg {
+                        FnArg::Receiver(..) => s.push_str("self"),
+                        FnArg::Typed(ty) => {
+                            s.push_str("_: ");
+                            s.push_str(&crate::type_to_string(*ty.ty.clone()).expect(
+                                "this should have failed earlier! please open a bug report!",
+                            ));
+                        }
+                    };
+                    if idx < arguments.len() - 1 {
+                        s.push_str(", ");
+                    }
+                }
+                s.push(')');
+                if let ::std::option::Option::Some(ret) = return_type {
+                    s.push_str(" -> ");
+                    s.push_str(
+                        &crate::type_to_string(ret.clone())
+                            .expect("this should have failed earlier! please open a bug report!"),
+                    );
+                }
+                s.push_str(r#" { todo!("not yet implemented") }"#);
+                s.push('\n');
+            }
+            s
+        };
+    let func_sigs = plugin_def.functions.iter().map(|f| {
+        let func_name = f.name.to_string();
+        let args = f.arguments.iter().map(|a| match a {
+            FnArg::Receiver(..) => "self".to_string(),
+            FnArg::Typed(ty) => crate::type_to_string(*ty.ty.clone())
+                .expect("this should have failed earlier! please open a bug report!"),
+        });
+        let return_typ = if let Some(ty) = f
+            .return_type
+            .as_ref()
+            .map(|ty| crate::type_to_string(ty.clone()))
+        {
+            quote!(::std::option::Option::Some(#ty))
+        } else {
+            quote!(::std::option::Option::None)
+        };
+        quote! {
+            (#func_name, &[#(#args),*], #return_typ)
+        }
+    });
+
     quote! {
         pub struct #plugin_ident {
             library: ::dynamic_plugin::PluginDynamicLibrary,
         }
 
         impl #plugin_ident {
+            /// The signature of this plugin. This number is dependent
+            /// on the functions, their arguments and their return
+            /// types. Two plugins with the same signature are *likely*
+            /// to be compatible.
             pub const PLUGIN_SIGNATURE: u64 = #hash;
+            /// The plugin definition is a string which defines an empty
+            /// Rust definition of the plugin. It is used to generate
+            /// useful error messages.
+            pub const PLUGIN_DEFINITION: &str = #definition;
+            /// The functions and their signatures. Each tuple holds
+            /// (function name, [arguments], maybe return type)
+            pub const PLUGIN_FUNCTIONS: &[(&'static str, &[&'static str], ::std::option::Option<&'static str>)] = &[
+                #(#func_sigs),*
+            ];
         }
 
         #host_impl
@@ -244,7 +376,13 @@ pub fn plugin_impl(tokens: TokenStream) -> TokenStream {
     };
 
     quote! {
-        ::dynamic_plugin::static_assert!(#target_plugin::PLUGIN_SIGNATURE == #hash, "The implementation signature does not match the definition. Check that all functions are implemented with the correct types.");
+        ::dynamic_plugin::static_assert!(
+            #target_plugin::PLUGIN_SIGNATURE == #hash,
+            ::dynamic_plugin::const_concat!(
+                "\nThe implementation does not match the definition:\n\n",
+                #target_plugin::PLUGIN_DEFINITION
+            )
+        );
 
         #[no_mangle]
         pub extern "C" fn _dynamic_plugin_signature() -> u64 {
@@ -256,6 +394,61 @@ pub fn plugin_impl(tokens: TokenStream) -> TokenStream {
         #(#functions)*
     }
     .into()
+}
+
+/// Convert a type to string, returning None if the macro would be
+/// failing elsewhere
+fn type_to_string(ty: Type) -> Option<String> {
+    match ty {
+        Type::Array(inner) => Some(format!("[{}]", type_to_string(*inner.elem)?)),
+        Type::BareFn(inner) => {
+            let mut s = String::new();
+            s.push_str(r#"unsafe extern "C" fn("#);
+            let has_inputs = !inner.inputs.is_empty();
+            for inp in inner.inputs {
+                s.push_str(&type_to_string(inp.ty)?);
+                s.push_str(", ");
+            }
+            if has_inputs {
+                // remove last ", "
+                s.pop();
+                s.pop();
+            }
+            s.push(')');
+            if inner.variadic.is_some() {
+                return None;
+            }
+            match inner.output {
+                ReturnType::Default => (),
+                ReturnType::Type(_, ty) => s.push_str(&format!("-> {}", type_to_string(*ty)?)),
+            }
+            Some(s)
+        }
+        Type::Group(inner) => type_to_string(*inner.elem),
+        Type::Paren(inner) => type_to_string(*inner.elem),
+        Type::Ptr(inner) => type_to_string(*inner.elem),
+        Type::Never(_) => Some("!".to_string()),
+        Type::Path(inner) => {
+            if inner.qself.is_some() {
+                return None;
+            }
+            // Hash only last segment
+            let last_segment = inner.path.segments.last().unwrap();
+            if !last_segment.arguments.is_none() {
+                return None;
+            }
+            Some(last_segment.ident.to_string())
+        }
+        Type::ImplTrait(_)
+        | Type::Infer(_)
+        | Type::Macro(_)
+        | Type::Reference(_)
+        | Type::Slice(_)
+        | Type::TraitObject(_)
+        | Type::Tuple(_)
+        | Type::Verbatim(_) => None,
+        _ => todo!("This type is not yet supported by dynamic-plugin"),
+    }
 }
 
 fn hash_type<H: Hasher>(hasher: &mut H, ty: Type) {
