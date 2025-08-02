@@ -14,7 +14,7 @@ debug-hashes = ["dynamic-plugin-macros/debug-hashes"]
 
 [dependencies]
 libloading = { version = "0.8.3" }
-dynamic-plugin-macros = { version = "0.6.0", path = "dynamic-plugin-macros" }
+dynamic-plugin-macros = { version = "0.7.0", path = "dynamic-plugin-macros" }
 thiserror = "2.0.11"
 libc = "0.2.155"
 sa = "2.0.0"
@@ -29,4 +29,4 @@ members = [
 ]
 
 [workspace.package]
-version = "0.6.0"
+version = "0.7.0"
