@@ -6,6 +6,7 @@ authors = ["Lily Hopkins <lily@hpkns.uk>"]
 description = "Write compile-time-checked, dynamically-loaded plugin libraries for your Rust software."
 repository = "https://github.com/lilopkins/dynamic-plugins-rs"
 license = "MIT"
+rust-version.workspace = true
 
 [features]
 host = ["dynamic-plugin-macros/host"]
@@ -30,3 +31,4 @@ members = [
 
 [workspace.package]
 version = "0.7.0"
+rust-version = "1.78.0"

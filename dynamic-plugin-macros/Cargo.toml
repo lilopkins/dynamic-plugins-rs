@@ -6,6 +6,7 @@ authors = ["Lily Hopkins <lily@hpkns.uk>"]
 description = "Macros for dynamic-plugin"
 repository = "https://github.com/lilopkins/dynamic-plugins-rs"
 license = "MIT"
+rust-version.workspace = true
 
 [lib]
 proc-macro = true
