@@ -45,8 +45,8 @@ pub trait PluginInterface {
     ///
     /// # Errors
     ///
-    /// - [`::dynamic_plugin::Error::NotAPlugin`] if the file provided is determined not to be a compatible (dynamic_plugin style) plugin.
-    /// - [`::dynamic_plugin::Error::InvalidPluginSignature`] if the signature does not match this loader.
+    /// - [`Error::NotAPlugin`] if the file provided is determined not to be a compatible (dynamic_plugin style) plugin.
+    /// - [`Error::InvalidPluginSignature`] if the signature does not match this loader.
     fn load_plugin_and_check<P>(path: P) -> Result<Self>
     where
         P: ::std::convert::AsRef<::std::ffi::OsStr>,
@@ -56,8 +56,8 @@ pub trait PluginInterface {
     ///
     /// # Errors
     ///
-    /// - [`::dynamic_plugin::Error::NotAPlugin`] if the file provided is determined not to be a compatible (dynamic_plugin style) plugin.
-    /// - [`::dynamic_plugin::Error::InvalidPluginSignature`] if `check_signature` is true and the signature does not match this loader.
+    /// - [`Error::NotAPlugin`] if the file provided is determined not to be a compatible (dynamic_plugin style) plugin.
+    /// - [`Error::InvalidPluginSignature`] if `check_signature` is true and the signature does not match this loader.
     fn load_plugin<P>(path: P, check_signature: bool) -> Result<Self>
     where
         P: ::std::convert::AsRef<::std::ffi::OsStr>,
@@ -77,7 +77,7 @@ pub trait PluginInterface {
     ///
     /// # Errors
     ///
-    /// - [`::dynamic_plugin::Error::NotAPlugin`] if the file provided is determined not to be a compatible plugin, i.e. not having the required functions present and exposed.
+    /// - [`Error::NotAPlugin`] if the file provided is determined not to be a compatible plugin, i.e. not having the required functions present and exposed.
     fn load_plugin_and_check_compat<P>(path: P) -> Result<Self>
     where
         P: ::std::convert::AsRef<::std::ffi::OsStr>,
