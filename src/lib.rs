@@ -32,8 +32,75 @@ pub enum Error {
     InvalidPluginSignature,
 }
 
+/// Common trait to all plugin interfaces
+///
+/// This can be usefull if you want to have your own custom loading function to use for multiple
+/// plugins types
+/// ```
+/// fn custom_load<T, P>(path: P) -> Result<T>
+/// where
+///     T: PluginInterface,
+///     P: ::std::convert::AsRef<::std::ffi::OsStr>
+/// {
+///     // do stuff
+///     let plugin = T::load_plugin_and_check(path)?;
+///     // do stuff
+///     Ok(plugin)
+/// }
+/// ```
+#[cfg(feature = "host")]
+pub trait PluginInterface {
+    /// Search `path` to find compatible plugins.
+    fn find_plugins<P>(path: P) -> ::std::vec::Vec<Self>
+    where
+        P: ::std::convert::AsRef<::std::path::Path>,
+        Self: Sized;
+
+    /// Load the plugin at `path`
+    ///
+    /// # Errors
+    ///
+    /// - [`Error::NotAPlugin`] if the file provided is determined not to be a compatible (dynamic_plugin style) plugin.
+    /// - [`Error::InvalidPluginSignature`] if the signature does not match this loader.
+    fn load_plugin_and_check<P>(path: P) -> Result<Self>
+    where
+        P: ::std::convert::AsRef<::std::ffi::OsStr>,
+        Self: Sized;
+
+    /// Load the plugin at `path`
+    ///
+    /// # Errors
+    ///
+    /// - [`Error::NotAPlugin`] if the file provided is determined not to be a compatible (dynamic_plugin style) plugin.
+    /// - [`Error::InvalidPluginSignature`] if `check_signature` is true and the signature does not match this loader.
+    fn load_plugin<P>(path: P, check_signature: bool) -> Result<Self>
+    where
+        P: ::std::convert::AsRef<::std::ffi::OsStr>,
+        Self: Sized;
+
+    /// Load the plugin at `path`, checking if it is valid
+    /// using a more compatible method, checking for the
+    /// presence of each function rather than just the
+    /// signature function.
+    ///
+    /// This makes it slightly easier to implement plugins
+    /// in languages other than Rust, however slightly
+    /// increases the chances of errors being returned
+    /// later, for example if function parameters do not
+    /// match, as in compatability mode this is not checked
+    /// when the plugin is loaded.
+    ///
+    /// # Errors
+    ///
+    /// - [`Error::NotAPlugin`] if the file provided is determined not to be a compatible plugin, i.e. not having the required functions present and exposed.
+    fn load_plugin_and_check_compat<P>(path: P) -> Result<Self>
+    where
+        P: ::std::convert::AsRef<::std::ffi::OsStr>,
+        Self: Sized;
+}
+
 /// Statically assert an expression with an error message.
-/// 
+///
 /// This is used internally by the dynamic-plugin macros.
 #[macro_export]
 macro_rules! static_assert {

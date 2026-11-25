@@ -198,6 +198,64 @@ pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
 
                 #(#funcs)*
             }
+
+            impl ::dynamic_plugin::PluginInterface for #plugin_ident {
+                /// Search `path` to find compatible plugins.
+                fn find_plugins<P>(path: P) -> ::std::vec::Vec<Self>
+                where
+                    P: ::std::convert::AsRef<::std::path::Path>,
+                {
+                    #plugin_ident::find_plugins(path)
+                }
+
+                /// Load the plugin at `path`
+                ///
+                /// # Errors
+                ///
+                /// - [`::dynamic_plugin::Error::NotAPlugin`] if the file provided is determined not to be a compatible (dynamic_plugin style) plugin.
+                /// - [`::dynamic_plugin::Error::InvalidPluginSignature`] if the signature does not match this loader.
+                fn load_plugin_and_check<P>(path: P) -> ::dynamic_plugin::Result<Self>
+                where
+                    P: ::std::convert::AsRef<::std::ffi::OsStr>,
+                {
+                    #plugin_ident::load_plugin_and_check(path)
+                }
+
+                /// Load the plugin at `path`
+                ///
+                /// # Errors
+                ///
+                /// - [`::dynamic_plugin::Error::NotAPlugin`] if the file provided is determined not to be a compatible (dynamic_plugin style) plugin.
+                /// - [`::dynamic_plugin::Error::InvalidPluginSignature`] if `check_signature` is true and the signature does not match this loader.
+                fn load_plugin<P>(path: P, check_signature: bool) -> ::dynamic_plugin::Result<Self>
+                where
+                    P: ::std::convert::AsRef<::std::ffi::OsStr>,
+                {
+                    #plugin_ident::load_plugin(path, check_signature)
+                }
+
+                /// Load the plugin at `path`, checking if it is valid
+                /// using a more compatible method, checking for the
+                /// presence of each function rather than just the
+                /// signature function.
+                ///
+                /// This makes it slightly easier to implement plugins
+                /// in languages other than Rust, however slightly
+                /// increases the chances of errors being returned
+                /// later, for example if function parameters do not
+                /// match, as in compatability mode this is not checked
+                /// when the plugin is loaded.
+                ///
+                /// # Errors
+                ///
+                /// - [`::dynamic_plugin::Error::NotAPlugin`] if the file provided is determined not to be a compatible plugin, i.e. not having the required functions present and exposed.
+                fn load_plugin_and_check_compat<P>(path: P) -> ::dynamic_plugin::Result<Self>
+                where
+                    P: ::std::convert::AsRef<::std::ffi::OsStr>,
+                {
+                    #plugin_ident::load_plugin_and_check_compat(path)
+                }
+            }
         })
     } else {
         None
