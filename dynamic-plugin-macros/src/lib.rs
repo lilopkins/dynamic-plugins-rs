@@ -97,8 +97,12 @@ pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
             impl #plugin_ident {
                 #hash_debug
 
+                #(#funcs)*
+            }
+
+            impl ::dynamic_plugin::PluginInterface for #plugin_ident {
                 /// Search `path` to find compatible plugins.
-                pub fn find_plugins<P>(path: P) -> ::std::vec::Vec<Self>
+                fn find_plugins<P>(path: P) -> ::std::vec::Vec<Self>
                 where
                     P: ::std::convert::AsRef<::std::path::Path>,
                 {
@@ -125,7 +129,7 @@ pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
                 ///
                 /// - [`::dynamic_plugin::Error::NotAPlugin`] if the file provided is determined not to be a compatible (dynamic_plugin style) plugin.
                 /// - [`::dynamic_plugin::Error::InvalidPluginSignature`] if the signature does not match this loader.
-                pub fn load_plugin_and_check<P>(path: P) -> ::dynamic_plugin::Result<Self>
+                fn load_plugin_and_check<P>(path: P) -> ::dynamic_plugin::Result<Self>
                 where
                     P: ::std::convert::AsRef<::std::ffi::OsStr>,
                 {
@@ -138,7 +142,7 @@ pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
                 ///
                 /// - [`::dynamic_plugin::Error::NotAPlugin`] if the file provided is determined not to be a compatible (dynamic_plugin style) plugin.
                 /// - [`::dynamic_plugin::Error::InvalidPluginSignature`] if `check_signature` is true and the signature does not match this loader.
-                pub fn load_plugin<P>(path: P, check_signature: bool) -> ::dynamic_plugin::Result<Self>
+                fn load_plugin<P>(path: P, check_signature: bool) -> ::dynamic_plugin::Result<Self>
                 where
                     P: ::std::convert::AsRef<::std::ffi::OsStr>,
                 {
@@ -179,7 +183,7 @@ pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
                 /// # Errors
                 ///
                 /// - [`::dynamic_plugin::Error::NotAPlugin`] if the file provided is determined not to be a compatible plugin, i.e. not having the required functions present and exposed.
-                pub fn load_plugin_and_check_compat<P>(path: P) -> ::dynamic_plugin::Result<Self>
+                fn load_plugin_and_check_compat<P>(path: P) -> ::dynamic_plugin::Result<Self>
                 where
                     P: ::std::convert::AsRef<::std::ffi::OsStr>,
                 {
@@ -195,8 +199,6 @@ pub fn plugin_interface(tokens: TokenStream) -> TokenStream {
                         })
                     }
                 }
-
-                #(#funcs)*
             }
         })
     } else {
