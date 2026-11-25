@@ -33,6 +33,21 @@ pub enum Error {
 }
 
 /// Common trait to all plugin interfaces
+///
+/// This can be usefull if you want to have your own custom loading function to use for multiple
+/// plugins types
+/// ```
+/// fn custom_load<T, P>(path: P) -> Result<T>
+/// where
+///     T: PluginInterface,
+///     P: ::std::convert::AsRef<::std::ffi::OsStr>
+/// {
+///     // do stuff
+///     let plugin = T::load_plugin_and_check(path)?;
+///     // do stuff
+///     Ok(plugin)
+/// }
+/// ```
 #[cfg(feature = "host")]
 pub trait PluginInterface {
     /// Search `path` to find compatible plugins.
